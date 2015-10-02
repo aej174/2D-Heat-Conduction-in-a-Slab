@@ -10,7 +10,7 @@
 
 import UIKit
 
-class ViewController: UIViewController {
+class ViewController: UIViewController, UITableViewDataSource, UITableViewDelegate {
     
     @IBOutlet weak var slabWidthTextField: UITextField!
     @IBOutlet weak var slabHeightTextField: UITextField!
@@ -27,6 +27,9 @@ class ViewController: UIViewController {
     
     @IBOutlet weak var heatTransferRateTextField: UITextField!
     
+    @IBOutlet weak var tableView: UITableView!
+    
+    
     let numberOfRows = 12
     let numberOfColumns = 12
     
@@ -34,6 +37,8 @@ class ViewController: UIViewController {
     var eachArea = Area()
     
     var rows:[Area] = []
+    
+    var profileArray:[Dictionary<String,String>] = []
     
     var dx = 0.0
     var dy = 0.0
@@ -52,9 +57,15 @@ class ViewController: UIViewController {
                 areas.append(rows)
             }
         }
+        self.tableView.dataSource = self
+        self.tableView.delegate = self
+        
         for var i = 0; i < numberOfRows; i++ {
-            for var j = 0; j < numberOfColumns; j++ {
-                thisTemperature = temperatures[i][j]
+            
+            for  j in 0..<numberOfColumns {
+                let yy = Double(round(100 * temperatures[i][j]) / 100)
+                //print("At i = \(i), j = \(j), temperature = \(yy)")
+                profileArray.append(["Column" : "\(j)", "Temperature" : "\(yy)"])
             }
         }
     }
@@ -64,6 +75,39 @@ class ViewController: UIViewController {
         // Dispose of any resources that can be recreated.
     }
     
+    //Mark: UITableViewDataSource
+    
+    func numberOfSectionsInTableView(tableView: UITableView) -> Int {
+        return numberOfRows
+    }
+    
+    func tableView(tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
+        return (numberOfColumns)
+    }
+    
+    func tableView(tableView: UITableView, cellForRowAtIndexPath indexPath: NSIndexPath) -> UITableViewCell {
+        let profileDict:Dictionary = profileArray[indexPath.row]
+        let cell: ProfileCell = tableView.dequeueReusableCellWithIdentifier("myCell") as! ProfileCell
+        cell.columnLabel.text = profileDict["Column"]
+        cell.temperatureLabel.text = profileDict["Temperature"]
+        return cell
+    }
+    
+    //Mark: UITableViewDelegate
+    
+    func tableView(tableView: UITableView, didDeselectRowAtIndexPath indexPath: NSIndexPath) {
+    }
+    
+    func tableView(tableView: UITableView, heightForHeaderInSection section: Int) -> CGFloat {
+        return 40.0
+    }
+    
+    func tableView(tableView: UITableView, titleForHeaderInSection section: Int) -> String? {
+        return "Row \(section)      Column                Temperature"
+    }
+    
+
+    //Mark: Enter data values and calculate results
     
     @IBAction func calculateButtonPressed(sender: UIButton) {
         
@@ -307,6 +351,8 @@ class ViewController: UIViewController {
         
         self.heatTransferRateTextField.text = "\(zz)"
         
+        profileArray = []
+        
         print("after \(iterations) iterations:")
         print("")
         for var i = 0; i < numberOfRows; i++ {
@@ -314,8 +360,10 @@ class ViewController: UIViewController {
                 //let xx = Double(round(100 * pastTemperatures[i][j]) / 100)
                 let yy = Double(round(100 * temperatures[i][j]) / 100)
                 print("At i = \(i), j = \(j), temperature = \(yy)")
+                profileArray.append(["Column" : "\(j)", "Temperature" : "\(yy)"])
             }
         }
+        self.tableView.reloadData()
 
 
     } //end func calculate
